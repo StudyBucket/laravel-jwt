@@ -16,6 +16,7 @@ use App\Jobs\User\StoreUser;
 use App\Jobs\User\UpdateUser;
 use App\Jobs\User\DestroyUser;
 
+use App\Http\Resources\User\UserResource;
 
 class UserController extends Controller
 {
@@ -27,7 +28,9 @@ class UserController extends Controller
     public function index()
     {
         if (Auth::user()->can('index', User::class)) {
-          return response(User::all())
+          $response = User::all();
+          $response = UserResource::collection($response);
+          return response($response)
                     ->setStatusCode(200);
         } else {
           return response('{"message:"}')

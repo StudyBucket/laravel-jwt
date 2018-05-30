@@ -21,6 +21,7 @@ use App\Jobs\Role\DestroyRole;
 use App\Jobs\User\AttachRole;
 use App\Jobs\User\DetachRole;
 
+use App\Http\Resources\Role\RoleResource;
 
 class RoleController extends Controller
 {
@@ -32,7 +33,9 @@ class RoleController extends Controller
     public function index()
     {
         if (Auth::user()->can('index', Role::class)) {
-          return response(Role::all())
+          $response = Role::all();
+          $response = RoleResource::collection($response);
+          return response($response)
                     ->setStatusCode(200);
         } else {
           return response(null)
