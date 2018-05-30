@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Config;
 
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
@@ -23,13 +24,15 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         if (Auth::user()->can('index', User::class)) {
-          $response = User::all();
-          $response = UserResource::collection($response);
+          $response = User::paginate(Config::get('pagination.itemsPerPage'));
+          $response = UserResource::collection($response)
+                        ->appends('paged', $request->input('paged'));
           return response($response)
                     ->setStatusCode(200);
         } else {
