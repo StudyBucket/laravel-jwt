@@ -67,4 +67,31 @@ class User extends Authenticatable
         return $this->roles()->where('slug', $roleSlug)->count() == 1;
     }
 
+    /**
+     * Returns models validation rules
+     *
+     * @param usage - determins the request type
+     */
+    public function modelRules($usage)
+    {
+        $rules = [
+            'store' => [
+                'name' => 'required|string|unique:users|min:3',
+                'firstname' => 'required|string|min:3',
+                'lastname' => 'required|string|min:3',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string|min:6|max:10',
+                'profile_image' =>'sometimes|file|mimes:jpeg,jpg,bmp,png|nullable'
+            ],
+            'update' => [
+                'name' => 'string|unique:users,name,'.$this->id.',id',
+                'firstname' => 'string|min:3',
+                'lastname' => 'string|min:3',
+                'email' => 'email|unique:users,email,'.$this->id.',id',
+                'password' => 'string|min:6|max:10',
+                'profile_image' =>'sometimes|file|mimes:jpeg,jpg,bmp,png|nullable'
+            ]
+        ];
+        return $rules[$usage];
+    }
 }
