@@ -10,6 +10,7 @@ use JWTAuth;
 use Auth;
 
 use App\Jobs\User\StoreUser;
+use App\Http\Resources\User\UserResource;
 
 class AuthController extends Controller
 {
@@ -23,17 +24,20 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
-        if ( ! $token = JWTAuth::attempt($credentials)) {
-            return response([
-                'status' => 'error',
-                'error' => 'credentials',
-                'msg' => 'Invalid Credentials.',
-            ], 401);
+        if (! $token = JWTAuth::attempt($credentials)) {
+            $response = [
+                'data' => [
+                  'error' => 'credentials'
+                ]
+            ];
+            return response($response, 401);
         }
-        return response([
-            'status' => 'success',
-            'token' => $token
-        ]);
+        $response = [
+            'data' => [
+                'token' => $token
+            ]
+        ];
+        return response($response, 200);
     }
 
     /**
@@ -41,13 +45,20 @@ class AuthController extends Controller
       *
       * @return response
       */
-    public function logout()
+    public function logout($passedToken = null)
     {
-        JWTAuth::invalidate();
-        return response([
-                'status' => 'success',
-                'msg' => 'Logged out Successfully.'
-            ], 200);
+        if($passedToken){
+            JWTAuth::invalidate($passedToken);
+            // TODO: Error Handling!!
+        } else {
+            JWTAuth::invalidate();
+        }
+        $response = [
+            'data' => [
+                'message' => 'success'
+            ]
+        ];
+        return response($response, 200);
     }
 
     /**
@@ -59,11 +70,50 @@ class AuthController extends Controller
     {
         $token = JWTAuth::getToken();
         $newToken = JWTAuth::refresh($token);
+        $response = [
+            'data' => [
+                'token' => $newToken
+            ]
+        ];
+        return response($response, 200);
+    }
 
-        return response([
-         'status' => 'success',
-         'token' => $newToken
-        ]);
+    /**
+      * Return data of the current logged-in user
+      *
+      * @var Request $request
+      *
+      * @return response
+      */
+    public function user(Request $request)
+    {
+        $response = new UserResource(Auth::user());
+        return response($response, 200);
+    }
+
+    /**
+      * Check
+      *
+      * @var Request $request
+      *
+      * @return response
+      */
+    public function check(Request $request)
+    {
+        if(Auth::user()){
+            $response = ['data' => [
+                    'message' => 'login valid'
+                ]
+            ];
+            $status = 200;
+        } else {
+            $response = ['data' => [
+                    'message' => 'login invalid'
+                ]
+            ];
+            $status = 401;
+        }
+        return response($response, $status);
     }
 
     /**
@@ -74,10 +124,10 @@ class AuthController extends Controller
      */
     public function signup(SignupUserRequest $request)
     {
-        if (!JWTAuth::getToken()) { //Logged in user cannot perform this action
+        if (!JWTAuth::getToken()) { // Logged in user cannot perform this action
           dispatch(new StoreUser($request->all()));
           return response(null)
-                    ->setStatusCode(201);
+                    ->setStatusCode(202);
         } else {
           return response(null)
                     ->setStatusCode(403);

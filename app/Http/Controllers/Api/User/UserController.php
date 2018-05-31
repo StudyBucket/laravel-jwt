@@ -52,7 +52,7 @@ class UserController extends Controller
         if (Auth::user()->can('create', User::class)) {
           dispatch(new StoreUser($request->all()));
           return response(null)
-                    ->setStatusCode(201);
+                    ->setStatusCode(202);
         } else {
           return response(null)
                     ->setStatusCode(403);
@@ -67,6 +67,14 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        if (Auth::user()->can('view', $user)) {
+          $response = new UserResource($user);
+          return response($response)
+                    ->setStatusCode(200);
+        } else {
+          return response(null)
+                    ->setStatusCode(403);
+        }
         return $user;
     }
 

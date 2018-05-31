@@ -57,7 +57,7 @@ class RoleController extends Controller
         if (Auth::user()->can('create', Role::class)) {
           dispatch(new StoreRole($request->all()));
           return response(null)
-                    ->setStatusCode(201);
+                    ->setStatusCode(202);
         } else {
           return response(null)
                     ->setStatusCode(403);
@@ -73,8 +73,9 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         if (Auth::user()->can('view', $role)) {
-          return response($role)
-                    ->setStatusCode(201);
+          $response = new RoleResource($role);
+          return response($response)
+                    ->setStatusCode(200);
         } else {
           return response(null)
                     ->setStatusCode(403);
