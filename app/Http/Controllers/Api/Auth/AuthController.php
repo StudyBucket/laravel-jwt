@@ -12,6 +12,8 @@ use Auth;
 use App\Jobs\User\StoreUser;
 use App\Http\Resources\User\UserResource;
 
+use App\Models\Auth\DeviceLogin;
+
 class AuthController extends Controller
 {
     /**
@@ -32,9 +34,15 @@ class AuthController extends Controller
             ];
             return response($response, 401);
         }
+        $newDeviceLogin = new DeviceLogin;
+        $newDeviceLogin->token = $token;
+        $newDeviceLogin->agent = $request->header('User-Agent');
+        $user = JWTAuth::toUser($token);
+        $user->deviceLogins()->save($newDeviceLogin);
         $response = [
             'data' => [
-                'token' => $token
+                'token' => $token,
+                //'user'  => $user
             ]
         ];
         return response($response, 200);
@@ -45,17 +53,54 @@ class AuthController extends Controller
       *
       * @return response
       */
-    public function logout($passedToken = null)
+    public function logout()
     {
-        if($passedToken){
-            JWTAuth::invalidate($passedToken);
-            // TODO: Error Handling!!
-        } else {
-            JWTAuth::invalidate();
-        }
+        $user = Auth::user();
+        $token = JWTAuth::getToken();
+        $deviceLogin = $user->deviceLogins()->where('token', $token)->first();
+        $deviceLogin->delete();
+        JWTAuth::invalidate($token);
+
         $response = [
             'data' => [
-                'message' => 'success'
+                //'message' => 'success'
+                'user' => $user,
+                //'token' => $token,
+                //'deviceLogin' => $deviceLogin
+            ]
+        ];
+        return response($response, 200);
+    }
+
+    /**
+      * Logout all devices of the current user
+      *
+      * @return response
+      */
+    public function logoutAll()
+    {
+        $user = Auth::user();
+        $token = JWTAuth::getToken();
+        $deviceLogins = $user->deviceLogins()->get();
+        // Invalidate all currently existing tokens for all devices of the user
+        foreach ($deviceLogins as $device) {
+          try {
+            JWTAuth::invalidate($device->token);
+          } catch(\Tymon\JWTAuth\Exceptions\TokenBlacklistedException $e) {
+            // token is allready invalidated
+            continue;
+          }
+        }
+        // Delete all records for former - now invalid - logins
+        $user->deviceLogins()->delete();
+        // Check weather there is something left ...
+        $deviceLogins = $user->deviceLogins()->get();
+        // respond sth
+        $response = [
+            'data' => [
+                //'message' => 'success'
+                'user' => $user,
+                'deviceLogins' => $deviceLogins
             ]
         ];
         return response($response, 200);
