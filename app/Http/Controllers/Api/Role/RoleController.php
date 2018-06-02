@@ -8,6 +8,7 @@ use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Config;
 
 use App\Http\Requests\Role\StoreRoleRequest;
 use App\Http\Requests\Role\UpdateRoleRequest;
@@ -28,13 +29,15 @@ class RoleController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         if (Auth::user()->can('index', Role::class)) {
-          $response = Role::all();
-          $response = RoleResource::collection($response);
+          $response = Role::paginate(Config::get('pagination.itemsPerPage'));
+          $response = RoleResource::collection($response)
+                        ->appends('paged', $request->input('paged'));
           return response($response)
                     ->setStatusCode(200);
         } else {
@@ -54,7 +57,7 @@ class RoleController extends Controller
         if (Auth::user()->can('create', Role::class)) {
           dispatch(new StoreRole($request->all()));
           return response(null)
-                    ->setStatusCode(201);
+                    ->setStatusCode(202);
         } else {
           return response(null)
                     ->setStatusCode(403);
@@ -70,8 +73,9 @@ class RoleController extends Controller
     public function show(Role $role)
     {
         if (Auth::user()->can('view', $role)) {
-          return response($role)
-                    ->setStatusCode(201);
+          $response = new RoleResource($role);
+          return response($response)
+                    ->setStatusCode(200);
         } else {
           return response(null)
                     ->setStatusCode(403);

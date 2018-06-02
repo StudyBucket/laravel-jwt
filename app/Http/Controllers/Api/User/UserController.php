@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Config;
 
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
@@ -23,13 +24,15 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
         if (Auth::user()->can('index', User::class)) {
-          $response = User::all();
-          $response = UserResource::collection($response);
+          $response = User::paginate(Config::get('pagination.itemsPerPage'));
+          $response = UserResource::collection($response)
+                        ->appends('paged', $request->input('paged'));
           return response($response)
                     ->setStatusCode(200);
         } else {
@@ -49,7 +52,7 @@ class UserController extends Controller
         if (Auth::user()->can('create', User::class)) {
           dispatch(new StoreUser($request->all()));
           return response(null)
-                    ->setStatusCode(201);
+                    ->setStatusCode(202);
         } else {
           return response(null)
                     ->setStatusCode(403);
@@ -64,6 +67,14 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
+        if (Auth::user()->can('view', $user)) {
+          $response = new UserResource($user);
+          return response($response)
+                    ->setStatusCode(200);
+        } else {
+          return response(null)
+                    ->setStatusCode(403);
+        }
         return $user;
     }
 
