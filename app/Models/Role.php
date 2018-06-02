@@ -14,10 +14,28 @@ class Role extends Model
         'permissions' => 'array',
     ];
 
+    /*
+    |--------------------------------------------------------------------------
+    | Relationships
+    |--------------------------------------------------------------------------
+    |
+    | Here is where you can specify relationships for this model.
+    |
+    */
+
     public function users()
     {
         return $this->belongsToMany(User::class, 'roles_users')->withPivot('incepts_at', 'expires_at');
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom functions
+    |--------------------------------------------------------------------------
+    |
+    | Here is where you can implement custom functions for this model.
+    |
+    */
 
     public function hasAccess(array $permissions) : bool
     {
@@ -33,6 +51,15 @@ class Role extends Model
         return $this->permissions[$permission] ?? false;
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Validation Rules
+    |--------------------------------------------------------------------------
+    |
+    | Here is where you can register validation rules for this model.
+    |
+    */
+    
     /**
      * Returns models validation rules
      *
