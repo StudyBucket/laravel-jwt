@@ -35,6 +35,10 @@ Route::group(['middleware' => 'jwt.auth'], function(){
       Route::post('detach', 'Api\Role\RoleController@detachFromUser');
   });
 
+  //UserFile routes
+  Route::resource('userfile', 'Api\Files\UserFileController', ['except' => ['edit', 'create']]);
+  Route::get('userfile/{userfile}/delivery', 'Api\Files\UserFileController@delivery');
+  Route::get('user/{user}/userfiles', 'Api\Files\UserFileController@indexUser');
 });
 
 //routes without jwt

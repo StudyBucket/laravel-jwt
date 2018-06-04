@@ -12,6 +12,9 @@ class StaticPermissions
        App\Models\Role::class => [
            'global-role'   => 'Full permissions on roles',
        ],
+       App\Models\Files\UserFile::class => [
+           'global-userfile'   => 'Full permissions on roles',
+       ],
     ];
 
     public static function getPermissionsOnModel($model)

@@ -18,6 +18,8 @@ class CreateUsersTable extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
+            $table->jsonb('settings')->nullable(); // jsonb deletes duplicates
+            $table->jsonb('privacy')->default('{"email":"private"}'); // jsonb deletes duplicates
             $table->rememberToken();
             $table->timestamps();
         });

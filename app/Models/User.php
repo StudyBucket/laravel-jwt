@@ -5,6 +5,10 @@ namespace App\Models;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
+use Auth;
+use App\Models\Auth\DeviceLogin;
+use App\Models\Files\UserFile;
+
 class User extends Authenticatable
 {
     use Notifiable;
@@ -25,6 +29,16 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password', 'remember_token',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'settings' => 'array',
+        'privacy' => 'array',
     ];
 
     public function setPasswordAttribute($pass)
@@ -49,7 +63,12 @@ class User extends Authenticatable
 
     public function deviceLogins()
     {
-        return $this->hasMany('App\Models\Auth\DeviceLogin');
+        return $this->hasMany(DeviceLogin::class);
+    }
+
+    public function userFiles()
+    {
+        return $this->hasMany(UserFile::class);
     }
 
     /*
@@ -81,6 +100,32 @@ class User extends Authenticatable
     public function inRole(string $roleSlug)
     {
         return $this->roles()->where('slug', $roleSlug)->count() == 1;
+    }
+
+    /**
+     * Checks if a property is visible to the public.
+     *
+     * @return bool
+     */
+    public function isPropertyPublic(string $property) : bool
+    {
+        if(!$this->privacy[$property] || $this->privacy[$property] != 'public') {
+          return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks if Auth::user() matches $this.
+     *
+     * @return bool
+     */
+    public function isCurrentAuthUser() : bool
+    {
+        if(Auth::user()->id != $this->id) {
+          return false;
+        }
+        return true;
     }
 
     /*
