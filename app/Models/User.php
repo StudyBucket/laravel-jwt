@@ -6,6 +6,8 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 use Auth;
+use App\Models\Auth\DeviceLogin;
+use App\Models\Files\UserFile;
 
 class User extends Authenticatable
 {
@@ -61,7 +63,12 @@ class User extends Authenticatable
 
     public function deviceLogins()
     {
-        return $this->hasMany('App\Models\Auth\DeviceLogin');
+        return $this->hasMany(DeviceLogin::class);
+    }
+
+    public function userFiles()
+    {
+        return $this->hasMany(UserFile::class);
     }
 
     /*
